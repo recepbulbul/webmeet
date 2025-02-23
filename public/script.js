@@ -7,20 +7,52 @@ let myStream = null;
 let myPeerId = null;
 const peers = {};
 
-// PeerJS bağlantısı - Render.com için güncellendi
-const peer = new Peer(undefined, {
-    host: location.hostname,
-    port: location.protocol === 'https:' ? 443 : 3000,
+// PeerJS bağlantısı - Render.com için optimize edildi
+const peer = new Peer({
+    host: 'webmeet-0vbv.onrender.com',
+    port: 443,
     path: '/peerjs',
-    secure: location.protocol === 'https:',
+    secure: true,
     debug: 3,
     config: {
         'iceServers': [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' }
+            { url: 'stun:stun.l.google.com:19302' },
+            { url: 'stun:stun1.l.google.com:19302' },
+            {
+                url: 'turn:numb.viagenie.ca',
+                credential: 'muazkh',
+                username: 'webrtc@live.com'
+            }
         ]
     }
+});
+
+// Bağlantı yeniden deneme mekanizması
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 3;
+
+function handlePeerDisconnect() {
+    if (reconnectAttempts < maxReconnectAttempts) {
+        console.log(`Yeniden bağlanmaya çalışılıyor... Deneme: ${reconnectAttempts + 1}`);
+        reconnectAttempts++;
+        
+        // Mevcut peer bağlantısını temizle
+        if (peer) {
+            peer.destroy();
+        }
+        
+        // 2 saniye bekle ve yeniden bağlan
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
+    } else {
+        alert('Bağlantı kurulamadı. Lütfen daha sonra tekrar deneyin.');
+    }
+}
+
+peer.on('disconnected', () => {
+    console.log('Peer bağlantısı koptu');
+    handlePeerDisconnect();
 });
 
 // Medya bağlantısını başlat
