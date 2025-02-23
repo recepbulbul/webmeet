@@ -10,13 +10,24 @@ const port = process.env.PORT || 3000;
 // PeerJS sunucusu
 const peerServer = ExpressPeerServer(server, {
     debug: true,
-    path: '/peerjs'
+    path: '/peerjs',
+    ssl: {
+        key: null,
+        cert: null
+    }
 });
 
 app.use('/peerjs', peerServer);
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.use(express.json());
+
+// CORS ayarlarını ekleyelim
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
 
 app.get('/', (req, res) => {
     res.render('index');
