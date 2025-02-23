@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
@@ -11,23 +12,23 @@ const port = process.env.PORT || 3000;
 const peerServer = ExpressPeerServer(server, {
     debug: true,
     path: '/peerjs',
-    ssl: {
-        key: null,
-        cert: null
-    }
+    allow_discovery: true,
+    proxied: true,
+    ssl: process.env.NODE_ENV === 'production',
+    generateClientId: () => uuidV4()
 });
+
+// CORS ayarları
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
 
 app.use('/peerjs', peerServer);
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.use(express.json());
-
-// CORS ayarlarını ekleyelim
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-});
 
 app.get('/', (req, res) => {
     res.render('index');
